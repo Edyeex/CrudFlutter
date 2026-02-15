@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="CrudFlutter.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1724"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="sqlite_sequence" custom_title="0" dock_id="1" table="4,15:mainsqlite_sequence"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000012400ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1">CREATE TABLE usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    codigo INTEGER NOT NULL UNIQUE CHECK (codigo &gt; 0),
+    data_cadastro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data_hora datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    acao VARCHAR(20) NOT NULL,
+    usuario_id INTEGER NOT NULL,
+    detalhes TEXT
+);
+
+CREATE TRIGGER log_insert_trigger 
+    AFTER INSERT ON usuarios
+BEGIN
+    INSERT INTO logs (acao, usuario_id, detalhes) 
+    VALUES ('CADASTROU', NEW.id, 'Nome: ' || NEW.nome || ', Código: ' || NEW.codigo);
+END;
+
+CREATE TRIGGER log_update_trigger 
+    AFTER UPDATE ON usuarios
+BEGIN
+    INSERT INTO logs (acao, usuario_id, detalhes) 
+    VALUES ('ATUALIZOU', NEW.id, 'Nome: ' || NEW.nome || ', Código: ' || NEW.codigo);
+END;
+
+CREATE TRIGGER log_delete_trigger 
+    BEFORE DELETE ON usuarios
+BEGIN
+    INSERT INTO logs (acao, usuario_id, detalhes) 
+    VALUES ('EXCLUIU', OLD.id, 'Nome: ' || OLD.nome || ', Código: ' || OLD.codigo);
+END;
+
+CREATE TRIGGER atualiza_data_trigger 
+    AFTER UPDATE ON usuarios
+BEGIN
+    UPDATE usuarios SET data_atualizacao = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
+CREATE INDEX idx_logs_usuario ON logs(usuario_id);
+
+CREATE TRIGGER valida_nome_trigger
+BEFORE INSERT ON usuarios
+BEGIN
+    SELECT 
+        CASE
+            WHEN TRIM(NEW.nome) = '' THEN
+                RAISE(ABORT, 'O nome não pode ser vazio')
+            WHEN NEW.nome GLOB '[0-9]*' THEN
+                RAISE(ABORT, 'O nome não pode conter números no começo!')
+        END;
+END;
+
+CREATE TRIGGER valida_nome_update_trigger
+BEFORE UPDATE ON usuarios
+BEGIN
+    SELECT 
+        CASE
+            WHEN TRIM(NEW.nome) = '' THEN
+                RAISE(ABORT, 'O nome não pode ser vazio')
+            WHEN NEW.nome GLOB '[0-9]*' THEN
+                RAISE(ABORT, 'O nome não pode conter números no começo!')
+        END;
+END;
+
+DROP TRIGGER IF EXISTS valida_nome_update_trigger;
+
+INSERT INTO usuarios (nome, codigo) VALUES
+('Teste', 226);
+
+DELETE FROM usuarios WHERE codigo = 226;
+
+SELECT * FROM usuarios;
+SELECT * FROM logs;</sql><current_tab id="0"/></tab_sql></sqlb_project>
