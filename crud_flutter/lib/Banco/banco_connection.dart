@@ -8,8 +8,6 @@ class BancoConnection {
   static final BancoConnection _instance = BancoConnection._internal();
   factory BancoConnection() => _instance;
 
-  static Database? _database;
-
   BancoConnection._internal() {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
@@ -17,25 +15,31 @@ class BancoConnection {
     }
   }
 
+  static Database? _database;
+
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
+    _database = await _connectToExistingDatabase();
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
-    String path;
+  Future<Database> _connectToExistingDatabase() async {
+    String dbPath = await _getDatabasePath();
 
-    if (Platform.isWindows) {
-      path = r'C:\temp\CrudFlutter\banco\CrudFlutter.db';
-    } else {
-      path = join(await getDatabasesPath(), 'bd_cervantes.db');
+    final dbFile = File(dbPath);
+    if (!await dbFile.exists()) {
+      throw Exception('Banco de dados não encontrado');
     }
 
-    return await openDatabase(
-      path,
-      version: 1,
-    );
+    return await openDatabase(dbPath, version: 1);
+  }
+
+  Future<String> _getDatabasePath() async {
+    if (Platform.isWindows) {
+      return r'C:\temp\CrudFlutter\banco\CrudFlutter.db'; // Talvez precise mudar dependendo do caminho onde salvou o projeto
+    } else {
+      throw Exception('Caminho do banco não configurado.');
+    }
   }
 
 
@@ -47,10 +51,7 @@ class BancoConnection {
 
   Future<List<Map<String, dynamic>>> listarUsuarios() async {
     Database db = await database;
-    return await db.query(
-      'usuarios',
-      orderBy: 'data_cadastro DESC',
-    );
+    return await db.query('usuarios', orderBy: 'data_cadastro DESC');
   }
 
   Future<int> atualizarUsuario(Map<String, dynamic> usuario) async {
@@ -65,18 +66,11 @@ class BancoConnection {
 
   Future<int> excluirUsuario(int id) async {
     Database db = await database;
-    return await db.delete(
-      'usuarios',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('usuarios', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> listarLogs() async {
     Database db = await database;
-    return await db.query(
-      'logs',
-      orderBy: 'data_hora DESC',
-    );
+    return await db.query('logs', orderBy: 'data_hora DESC');
   }
 }

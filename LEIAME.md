@@ -6,16 +6,23 @@ Informações.
 
 ## No trecho:
 
-##### Future<String> _getDatabasePath() async {
-     if (Platform.isWindows) {
-         return r'C:\temp\CrudFlutter\banco\CrudFlutter.db';
-     } else {
-         throw Exception('Caminho do banco não configurado.');
-     }
+##### Future<Database> _initDatabase() async {
+    String path;
+
+    if (Platform.isWindows) {
+      path = r'C:\temp\CrudFlutter\banco\CrudFlutter.db';
+    } else {
+      path = join(await getDatabasesPath(), 'bd_cervantes.db');
+    }
+
+    return await openDatabase(
+      path,
+      version: 1,
+    );
 #### }
 #
 
-Vai ser preciso mudar o caminho para onde está salvo a pasta do projeto.
+Vai ser preciso mudar o caminho para onde está salvo a pasta do projetoCaso ele não encontre de forma automática.
 
 Como no exemplo:
 ### C:\temp\CrudFlutter\banco\CrudFlutter.db
