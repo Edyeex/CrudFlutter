@@ -12,7 +12,7 @@ Informações.
     if (Platform.isWindows) {
       path = r'C:\temp\CrudFlutter\banco\CrudFlutter.db';
     } else {
-      path = join(await getDatabasesPath(), 'bd_cervantes.db');
+      path = join(await getDatabasesPath(), 'CrudFlutter.db');
     }
 
     return await openDatabase(
